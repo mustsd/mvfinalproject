@@ -137,14 +137,11 @@ def pick(pose_list: list ):
     if current_actual is not None:
         r = current_actual[3] 
     else:
-        r = 200.0  # 如果没获取到，给一个安全的初始默认值
+        r = 200.0  # default value if feed not ready
     globalLockValue.release()
 
-    r = 200
-    z = -168
+    z = -168 # default pick height
 
-
-    # 260.85
     initial_point = [260.85, 46.31, -60, r]
     move_J(move, initial_point)
     WaitArrive(initial_point)

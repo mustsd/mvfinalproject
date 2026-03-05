@@ -66,7 +66,8 @@ def segment(img, color=None):
         # combine mask
         color_mask = np.zeros(img.shape[:2], dtype=np.uint8)
         for c in COLOR_RANGES:
-            if c in ("red2", "white", "black"):  # skip red2 since it's combined in red, white and black are too broad
+            if c in ("red2", "white", "black"):  
+                # skip red2 since it's combined in red, white and black are too broad
                 continue
             color_mask = cv2.bitwise_or(color_mask, detect_color(img, c))
         mask = cv2.bitwise_or(thotsu, color_mask)
@@ -92,7 +93,7 @@ def detect_shape(contour):
     elif vertices == 5:
         shape = "pentagon"
     else:
-        # 顶点多 → 圆形
+        # circle
         area = cv2.contourArea(contour)
         circularity = 4 * np.pi * area / (peri ** 2)
         shape = "circle" if circularity > 0.7 else "unknown"
@@ -130,13 +131,6 @@ def detect_by_shape(seg_img, target_shape: str = None):
             continue
 
         results.append({"shape": shape, "cx": cx, "cy": cy})
-
-        # 圆形用外接圆画，其他用 approx 轮廓
-        # if shape == "circle":
-        #     (x, y), radius = cv2.minEnclosingCircle(cnt)
-        #     cv2.circle(img_vis, (int(x), int(y)), int(radius), (0, 0, 255), 3)
-        # else:
-        #     cv2.drawContours(img_vis, [approx], -1, (0, 0, 255), 2)
 
     # print(results)
     return results
