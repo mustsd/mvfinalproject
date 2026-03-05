@@ -2,4 +2,6 @@
 
 machine vision project 
 
+![GUI interface](image.png)
+
 ![alt text](calibration/img/obj1.jpg)

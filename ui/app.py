@@ -401,7 +401,7 @@ with col_ctrl:
     st.markdown('<div class="panel"><div class="panel-title">// Detection Filters</div>', unsafe_allow_html=True)
     color_filter = st.selectbox(
         "Color",
-        ["Any Color", "Red", "Blue", "Green", "Yellow", "Purple", "Pink", "Black"],
+        ["Any Color", "Red", "Blue", "Green", "Yellow", "Purple", "Pink", "Brown", "Orange", "White", "Black"],
         key="color_sel",
     )
     shape_filter = st.selectbox(
