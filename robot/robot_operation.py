@@ -72,7 +72,7 @@ def WaitArrive(point_list, timeout = 10):
                 return
         globalLockValue.release()  
 
-        if time.time() - start_time > timeout:
+        if time() - start_time > timeout:
             print("timeout!")
             return
         sleep(0.01)
@@ -141,20 +141,22 @@ def pick(pose_list: list ):
     globalLockValue.release()
 
     r = 200
-    initial_point = [20, 280, -60, r]
+    z = -168
+
+
+    # 260.85
+    initial_point = [260.85, 46.31, -60, r]
     move_J(move, initial_point)
     WaitArrive(initial_point)
 
+    place = [282.98, -244.47, -60, r]
 
-    approach_box = [20, 280, -50, r]
-    place = [20, 280, -50, r]
-    
     for pose in pose_list:
-        approach_point = [pose[0], pose[1], -50, r]
+        approach_point = [pose[0], pose[1], z + 30, r]
         move_J(move, approach_point)
         WaitArrive(approach_point)
 
-        pick_point = [pose[0], pose[1], -20, r]
+        pick_point = [pose[0], pose[1], z, r]
         move_L(move, pick_point)
         WaitArrive(pick_point)
 
@@ -166,9 +168,7 @@ def pick(pose_list: list ):
         WaitArrive(approach_point)
 
         # move to place point
-        move_J(move, approach_box)
-        WaitArrive(approach_box)
-        move_L(move, place)
+        move_J(move, place)
         WaitArrive(place)
         
         dashboard.DO(1, 0)  # release

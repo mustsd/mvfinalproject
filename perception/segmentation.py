@@ -40,6 +40,8 @@ def detect_color(img, color: str):
 
     if color == "blue":
         kernel = np.ones((9, 9), np.uint8)
+        mask = cv2.dilate(mask, kernel, iterations=2)
+        mask = cv2.erode(mask, kernel, iterations=1)
     else:
         kernel = np.ones((5, 5), np.uint8)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
