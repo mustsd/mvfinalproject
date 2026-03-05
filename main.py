@@ -9,16 +9,6 @@ from perception.segmentation import detect
 from robot.transform import transform, robot_pick
 
 
-def pixel_to_robot(u, v, H):
-    # Input: u, v as floats, H as 3x3 homography
-    p = np.array([u, v, 1.0], dtype=np.float32).reshape(3, 1)
-    pr = H @ p
-    pr = pr / pr[2, 0]  # divide by last coordinate to normalize
-    X = pr[0, 0]
-    Y = pr[1, 0]
-    return X, Y
-
-
 def main():
     parser = argparse.ArgumentParser(
                     prog='CLI',
