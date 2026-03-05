@@ -83,17 +83,12 @@ def main():
     
     # Parse arguments
     args = parser.parse_args()
-
-    # python main.py calibrate
-    # python main.py detect --mode plan 
-    # python main.py detect --mode execute
-
     try:
         if args.func == 'calibrate':
             print("cli.calibrate(args)")
             calibration.calibrate()
 
-        elif args.func == 'detect':
+        elif args.func == 'detect' or args.func == 'pick':
             print("cli.detect(args)", args.mode, args.color, args.shape)
 
             with open("calibration/calibration.json", "r") as f:
@@ -110,22 +105,21 @@ def main():
 
             img = cv2.imread("calibration/img/obj1.jpg")
             obj_pos, img_vis = detect(img, color=args.color, shape=args.shape)
-            
+
             if len(obj_pos) == 0:
-                print("====== No target found.")
+                print("======= No target found. =======")
                 return
             else:
-                print(f"====== {len(obj_pos)} targets found. ")
+                print(f"======= {len(obj_pos)} targets found. =======")
             print(f"Detected object positions in pixel coordinates: {len(obj_pos)} objs. {obj_pos}")
             obj_pos_robot = transform(obj_pos, H)
 
-            if args.mode == 'execute':
-                print("Executing detection (sending to robot)...")
 
-                robot_pick(obj_pos_robot)
-
-        elif args.func == 'pick':
-            print("cli.pick(args)")
+            if args.func == 'pick':
+                if args.mode == 'execute':
+                    print("Executing pick (sending to robot)...")
+                    robot_pick(obj_pos_robot)
+                    print("CLI pick completed.")
 
     except KeyboardInterrupt:
         print("\n\n  Operation cancelled by user")

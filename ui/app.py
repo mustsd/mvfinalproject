@@ -21,7 +21,7 @@ from robot.transform import transform, robot_pick
 
 # ─── Page Config ────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="MG400 Vision Control",
+    page_title="Integrated Vision-Guided Robotic Pick-and-Place System",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -127,6 +127,15 @@ st.markdown("""
     background: #4a90d9;
     color: #fff;
   }
+            
+  .st-key-start_cam button {
+    color: green !important;
+  }
+            
+  .st-key-stop_cam button {
+    color: red !important;
+  }
+            
   /* Run pick — accent */
   .run-pick-btn > button {
     background: #1a3a1a !important;
@@ -250,6 +259,7 @@ st.markdown("""
     border-color: #2d3a4a !important;
     color: #8bacc8 !important;
   }
+            
 
   /* Metric */
   [data-testid="stMetric"] {
@@ -273,6 +283,8 @@ st.markdown("""
   /* Hide streamlit chrome */
   #MainMenu, footer, header { visibility: hidden; }
   .block-container { padding-top: 1rem; padding-bottom: 1rem; }
+            
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -356,7 +368,7 @@ img_status = "Image Loaded" if st.session_state.captured_image is not None else 
 st.markdown(f"""
 <div class="hdr">
   <div>
-    <div class="hdr-title">🤖 MG400 Vision Control</div>
+    <div class="hdr-title">🤖 Integrated Vision-Guided Robotic Pick-and-Place System</div>
     <div class="hdr-sub">
       <span class="status-dot {dot_class}"></span>
       {img_status}
@@ -466,14 +478,10 @@ with col_ctrl:
     st.markdown('<div class="run-pick-btn">', unsafe_allow_html=True)
     if st.button(pick_label, key="btn_pick", disabled=run_disabled):
         with st.spinner(""):
-            success_count = 0
-            for i, pos in enumerate(st.session_state.targets):
-                x, y = pos[0], pos[1]
-                robot_pick(x, y)
-                success_count += 1
-                add_log(f"Pick {i+1}/{len(st.session_state.targets)} OK → ({x:.1f}, {y:.1f})")
-            st.session_state.pick_count += success_count
-            st.session_state.last_status = ("success", f"✓ All {success_count} picks completed.")
+            targets = st.session_state.targets
+            # robot picks targets
+            robot_pick(targets)
+            st.session_state.last_status = ("success", f"✓ All {len(targets)} picks completed.")
         st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -512,6 +520,64 @@ with col_img:
           </div>
         </div>
         """, unsafe_allow_html=True)
+
+
+    # ---------- Webcam real-time preview + capture ----------
+    if "cam_on" not in st.session_state:
+        st.session_state.cam_on = False
+    if "cam_frame" not in st.session_state:
+        st.session_state.cam_frame = None
+
+    col1, col2, col3 = st.columns([3,3,5])
+    with col1:
+        if st.button("▶ START CAMERA"):
+            st.session_state.cam_on = True
+    with col2:
+        if st.button("■ STOP CAMERA", key="stop_cam"):
+            st.session_state.cam_on = False
+
+    with col3:
+        if st.button("📸 CAPTURE"):
+            if st.session_state.get("cam_frame") is not None:
+                # store PIL image into session_state as captured_image (fits your app)
+                st.session_state.captured_image = st.session_state.cam_frame.copy()
+                st.session_state.annotated_image = None
+                st.session_state.detected = False
+                st.session_state.targets = []
+                add_log("Captured image from camera")
+                st.success("Captured")
+
+    # placeholder for live feed
+    cam_placeholder = st.empty()
+
+    # Camera loop (runs while page is active and cam_on True)
+    if st.session_state.cam_on:
+        cap = cv2.VideoCapture(0)  # 改为你的摄像头索引或 rtsp 地址
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+        try:
+            while st.session_state.cam_on and cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                # small processing if needed (resize)
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img_pil = Image.fromarray(rgb)
+                # 保存当前帧到 session_state 以便 CAPTURE 使用
+                st.session_state.cam_frame = img_pil
+                cam_placeholder.image(img_pil, width=640, caption="Live Camera Feed")
+                # 必要时降低帧率以减轻 CPU
+                time.sleep(0.1)
+                # allow Streamlit to handle user interactions
+                if not st.session_state.cam_on:
+                    break
+        except Exception as e:
+            st.error(f"Camera error: {e}")
+        finally:
+            cap.release()
+            cam_placeholder.empty()
+
 
 
 # ══════════════════════════ RIGHT: Status & Coords ═══════════════════════════
@@ -583,3 +649,6 @@ with col_status:
         st.markdown('<div style="font-family:Share Tech Mono,monospace;font-size:0.7rem;color:#2d3a4a;">No events yet.</div>',
                     unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
+
+
+

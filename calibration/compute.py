@@ -14,6 +14,7 @@ def get_coordinates(event, x, y, flags, param):
         img_pts = np.append(img_pts, np.array([[x, y]]), axis=0)
         
 def calibrate():
+    """Calibration routine to compute homography matrix from image pixels to robot coordinates."""
     # Load image
     project_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(project_dir, '..', 'calibration/img', 'cap.jpg')
@@ -57,7 +58,6 @@ def calibrate():
             f.write(f"\nImage size: {img.shape[1]}x{img.shape[0]}", )
             f.write(f"\nDate: {datetime.now()}", )
     except ValueError:
-        
         print("Invalid input format. Please enter coordinates as 'X1,Y1;X2,Y2;...'.")
         return
 

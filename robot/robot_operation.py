@@ -1,6 +1,6 @@
 import threading
 from robot.dobot_api import DobotApiDashboard, DobotApi, DobotApiMove, MyType,alarmAlarmJsonFile
-from time import sleep
+from time import sleep, time
 import numpy as np
 import re
 
@@ -58,7 +58,8 @@ def GetFeed(feed: DobotApi):
             globalLockValue.release()
         sleep(0.001)
 
-def WaitArrive(point_list):
+def WaitArrive(point_list, timeout = 10):
+    start_time = time()
     while True:
         is_arrive = True
         globalLockValue.acquire()
@@ -70,7 +71,11 @@ def WaitArrive(point_list):
                 globalLockValue.release()
                 return
         globalLockValue.release()  
-        sleep(0.001)
+
+        if time.time() - start_time > timeout:
+            print("timeout!")
+            return
+        sleep(0.01)
 
 def ClearRobotError(dashboard: DobotApiDashboard):
     global robotErrorState
@@ -127,6 +132,14 @@ def pick(pose_list: list ):
     feed_thread1.setDaemon(True)
     feed_thread1.start()
     
+    # get current r value for safe initial position
+    globalLockValue.acquire()
+    if current_actual is not None:
+        r = current_actual[3] 
+    else:
+        r = 200.0  # 如果没获取到，给一个安全的初始默认值
+    globalLockValue.release()
+
     r = 200
     initial_point = [20, 280, -60, r]
     move_J(move, initial_point)
@@ -162,4 +175,6 @@ def pick(pose_list: list ):
         dashboard.DO(2, 1)  # blow
         sleep(0.5) 
         dashboard.DO(2, 0)  # stop blow 
+
+    dashboard.close()
 
